@@ -1,5 +1,5 @@
 #pip install python-vlc
-from datetime import date
+import datetime
 import vlc
 import os
 import time
@@ -10,7 +10,8 @@ import time
 
 def checkTasks():
 	list2 = [item[1] for task in finalList]
-	today = date.today()
+	now = datetime.datetime.now()
+	today = now.strftime('%Y-%m-%d')
 	flag = 0
 
 #if the due date matches today's date play the audio if not notify
