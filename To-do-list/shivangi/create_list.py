@@ -148,6 +148,7 @@ def Menu(AddedList, numList):
 
 	if userInput == 10:
 		print('\nExiting To-Do List\n')
+		print(finalList)
 		sys.exit()
 
 

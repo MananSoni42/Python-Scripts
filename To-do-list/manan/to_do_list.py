@@ -3,12 +3,14 @@ import os
 import datetime
 from PIL import Image,ImageDraw,ImageFont
 from gi.repository import Gio
-#from playsound import playsound
-from pygame import mixer
+import vlc
 
 class tasks:
     tasks = []
-    default_audio = './consequence.mp3'
+    #path to audio file
+    audio = './consequence.mp3'
+
+    #add a task to the to-do list
     def add(self,message,date,urg,imp):
         task = {}
         task["message"] = message
@@ -20,6 +22,9 @@ class tasks:
         task["done"] = False
         self.tasks.append(task)
 
+    #show the to-do list
+    #to show entire list: show()
+    #to show only some elements: show(full_list=False,partial_list = <list to be shown>)
     def show(self,full_list=True,partial_list=None,num=False):
         if full_list:
             t = self.tasks
@@ -41,6 +46,9 @@ class tasks:
     def empty(self):
         self.tasks = []
 
+    #sort the list
+    #default: sort by urgency, then by importance
+    #use sort(<key>) to sort by a custom key
     def sort(self,user_key=None):
         if not user_key:
             k = lambda x: (x['urg'],x['imp'])
@@ -48,6 +56,7 @@ class tasks:
             k = lambda x: x[user_key]
         self.tasks.sort(key = k,reverse=True)
 
+    #search the list for a key,value pair
     def search(self,key,value):
         t = []
         for task in self.tasks:
@@ -55,6 +64,7 @@ class tasks:
                 t.append(task)
         return t
 
+    #search for keywords in the messages of the list
     def keyword_search(self,keyword):
         t = []
         for task in self.tasks:
@@ -62,25 +72,38 @@ class tasks:
                 t.append(task)
         return t
 
+    #save list to a json file
+    #default: to-do-list-data.json
+    #to save to a custom file: save(<name of file>.json)
     def save(self,out_file='to-do-list-data.json'):
         print(f'saving to {out_file}')
-        data = {"to-do-list":self.tasks,"audio":self.default_audio}
+        data = {"to-do-list":self.tasks,"audio":self.audio}
         with open(out_file,'w') as f:
             json.dump(data,f,indent = 4,default=str)
 
+    #load list from a json file
+    #default: to-do-list-data.json
+    #to load from a custom file: load(<name of file>.json)
     def load(self,in_file ='to-do-list-data.json'):
         print(f'loading from {in_file}')
 
-        self.upcoming_reminders()
-        self.current_reminders()
-
         with open(in_file) as f:
-            self.tasks = json.load(f)["to-do-list"]
-            self.default_audio = json.load(f)["audio"]
+            d = json.load(f)
+            self.tasks = d["to-do-list"]
+
+            self.audio = d["audio"]
+            if not os.path.exists(self.audio):
+                print(f'File {self.audio} no longer Exists! Switching to default reminder Tone')
+                self.audio = './consequence.mp3'
+
             for task in self.tasks:
                 date = task["date"]
                 year,month,day = date.split('-')
                 task["date"] = datetime.date(int(year),int(month),int(day))
+
+            self.upcoming_reminders()
+            self.current_reminders()
+
     #returns the path to the current wallpaper
     #utility for update_wallpaper
     def get_wallpaper(self):
@@ -98,7 +121,7 @@ class tasks:
 
         return path
 
-    #update wallpaper to given wallpaper
+    #update wallpaper according to list of tasks
     def update_wallpaper(self):
         tasks = self.tasks
         final_img = self.make_img_from_list()
@@ -116,6 +139,7 @@ class tasks:
         height = wallpaper.size[1]
         margin = 50
         txt_margin = 20
+        date_margin = 350
 
         #positions of all messages
         #leave one extra empty space (if last message is very long)
@@ -137,7 +161,7 @@ class tasks:
 
         #write headers - urgent / important
         draw.text(( wallpaper.size[0] - 5*f1_size, margin), "Urgent", font=fnt1, fill=(255,0,0,255))
-        draw.text(( wallpaper.size[0] - 6*f1_size, wallpaper.size[1] - margin - f1_size), "Important", font=fnt1, fill=(255,255,0,255))
+        draw.text(( wallpaper.size[0] - 7*f1_size, wallpaper.size[1] - margin - f1_size), "Not Urgent", font=fnt1, fill=(255,255,0,255))
 
         #write tasks
         for i in range(len(tasks)):
@@ -157,18 +181,21 @@ class tasks:
                             break
                     #cut text if it is 'done'
                     if tasks[i]["done"] is True:
-                        draw.line((midx+txt_margin,pos[i]+c*count+fnt.getsize(tasks[i]["message"])[1]/2,midx+txt_margin+fnt.getsize(' '.join(lst[:lst.index(l)-1]))[0],pos[i]+c*count+fnt.getsize(tasks[i]["message"])[1]/2),width=6,fill="white")
+                        draw.line((midx+date_margin+txt_margin,pos[i]+c*count+fnt.getsize(tasks[i]["message"])[1]/2,midx+date_margin+txt_margin+fnt.getsize(' '.join(lst[:lst.index(l)-1]))[0],pos[i]+c*count+fnt.getsize(tasks[i]["message"])[1]/2),width=6,fill="white")
                     #write the chosen text
-                    draw.text((midx+txt_margin,pos[i]+c*count), ' '.join(lst[:end]), font=fnt, fill=(255,255,255,255))
+                    draw.text((midx+date_margin+txt_margin,pos[i]+c*count), ' '.join(lst[:end]), font=fnt, fill=(255,255,255,255))
                     #delete text that has been written and continue
                     del lst[:end]
                     count+=1
+                    draw.text((midx+txt_margin,pos[i]), str(tasks[i]["date"]), font=fnt, fill=(255,255,255,255))
+
             #only one line for this task
             else:
-                #cut text if it is 'done'
+                #cut if done
                 if tasks[i]["done"] is True:
-                    draw.line((midx+txt_margin,pos[i]+fnt.getsize(tasks[i]["message"])[1]/2,midx+txt_margin+fnt.getsize(tasks[i]["message"])[0],pos[i]+fnt.getsize(tasks[i]["message"])[1]/2),width=6,fill="white")
-                draw.text((midx+txt_margin,pos[i]), tasks[i]["message"], font=fnt, fill=(255,255,255,255))
+                    draw.line((midx+date_margin+txt_margin,pos[i]+fnt.getsize(tasks[i]["message"])[1]/2,midx+date_margin+txt_margin+fnt.getsize(tasks[i]["message"])[0],pos[i]+fnt.getsize(tasks[i]["message"])[1]/2),width=6,fill="white")
+                draw.text((midx+date_margin+txt_margin,pos[i]), tasks[i]["message"], font=fnt, fill=(255,255,255,255))
+                draw.text((midx+txt_margin,pos[i]), str(tasks[i]["date"]), font=fnt, fill=(255,255,255,255))
 
         out = Image.alpha_composite(wallpaper, txt)
         return out
@@ -218,24 +245,32 @@ class tasks:
         else:
             for task in today_tasks:
                 os.system(f'notify-send "Due today: {task["message"]}" ')
-            mixer.init()
-            mixer.music.load(self.default_audio)
-            mixer.music.play()
-            self.ask_user(today_tasks)
+            print(self.audio)
+            p = vlc.MediaPlayer(self.audio)
+            p.play()
 
+            self.ask_user(today_tasks)
+            self.update_wallpaper()
+
+    #mark task[val-1] as Done
     def mark_as_done(self,val):
         ind = int(val) - 1
         print(f'marked "{self.tasks[ind]["message"]}" as Done')
         self.tasks[ind]["done"] = True
 
     #cahnge default audio to user supplied Audio
-    def reminder_audio(path):
+    #audio is passeed as a pth to the audio
+    def reminder_audio(self,path):
+
+        #change path to script's path
+        os.chdir(sys.path[0])
+
         if not os.path.isfile(path):
             print('No such file exists')
             return False
-        if os.path.splitext(path)[1].lower() not in ['.mp4','.wav']:
+        if os.path.splitext(path)[1].lower() not in ['.mp3','.wav']:
             print('Incorrect Format! Only .mp3 and .wav files are supported')
             return False
         else:
-            self.default_audio = path
+            self.audio = path
             return True

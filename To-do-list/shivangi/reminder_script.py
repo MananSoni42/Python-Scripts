@@ -4,14 +4,11 @@ import vlc
 import os
 import time
 
-
-
-
-
 def checkTasks():
 	list2 = [item[1] for task in finalList]
 	now = datetime.datetime.now()
 	today = now.strftime('%Y-%m-%d')
+	print(time)
 	flag = 0
 
 #if the due date matches today's date play the audio if not notify
@@ -26,5 +23,3 @@ def checkTasks():
 
 if __name__ == '__main__' :
 	checkTasks()
-	
-	

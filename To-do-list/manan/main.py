@@ -134,7 +134,7 @@ def menu(to_do_list):
             try:
                 to_do_list.load()
             except FileNotFoundError:
-                print('You haven\'t saved any saved Yet!')
+                print('You haven\'t saved any tasks Yet!')
 
         if val == 9:
             print('You may need to restart gnome for the changes to be reflected!')
