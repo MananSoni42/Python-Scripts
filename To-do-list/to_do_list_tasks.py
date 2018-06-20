@@ -1,4 +1,4 @@
-""" class to manipulate the tasks added for to-do list """
+""" Manipulate a To-do list. """
 
 import json
 import os
@@ -10,6 +10,19 @@ import vlc
 
 
 class tasks:
+    """
+    Class to manipulate the tasks added for to-do list.
+
+    Attributes:
+    * tasks: list of dictionaries each with keys:
+      {message,date,urg,imp,urg/imp,done}
+    * audio: path to audio file
+
+    Methods:
+    * add
+    *
+
+    """
     tasks = []
 
     # path to audio file
@@ -17,6 +30,18 @@ class tasks:
 
     # add a task to the to-do list
     def add(self, message, date, urg, imp):
+        """
+        Adds a new message to the current to-do list
+
+
+        Arguements:
+        message - a string containing message of current task
+        date - due date of task in datetime.date() format (YYYY-MM-DD)
+        urg - integer between 1-10 denoting urgency of task
+        imp - integer between 1-10 denoting importance of task
+
+        Returns: Nothing
+        """
         task = {}
         task["message"] = message
         task["date"] = date
@@ -31,8 +56,22 @@ class tasks:
     # to show entire list: show()
     # to show only some elements: show(full_list=False,partial_list = <list to
     # be shown>)
-    def show(self, full_list=True, partial_list=None, num=False):
-        if full_list:
+    def show(self, partial_list=None, num=False):
+        """
+        Shows either the entire or a part of the list.
+
+        To print entire list: show().
+        To print numbered list: show(num=True).
+        To print partial list: show(partial_list = <list of some elements>).
+
+        Arguements:
+        partial_list - a subset of the current list to be printed (default: None)
+        num - a boolean to denote if numbering is to be displayed.
+
+        returns:
+        Length of list printed.
+        """
+        if not partial_list:
             t = self.tasks
         else:
             t = partial_list
@@ -40,20 +79,33 @@ class tasks:
         if num:
             count = 1
             for task in t:
-                print('{} - {} - {} - urg: {} - imp: {}'.format(count,task["message"],task["date"],task["urg"],task["imp"]))
+                print('{} - {} - {} - urg: {} - imp: {}'.format(
+                    count, task["message"], task["date"], task["urg"], task["imp"]))
                 count += 1
         else:
             for task in t:
-                print('{} - {} - urg: {} - imp: {}'.format(task["message"],task["date"],task["urg"],task["imp"]))
+                print('{} - {} - urg: {} - imp: {}'.format(
+                    task["message"], task["date"], task["urg"], task["imp"]))
         return len(t)
 
     def empty(self):
+        """ Empty current list. """
         self.tasks = []
 
     # sort the list
     # default: sort by urgency, then by importance
     # use sort(<key>) to sort by a custom key
     def sort(self, user_key=False):
+        """
+        Sort the current list.
+
+        Default: sort by urgency, if same sort by importance.
+
+        Arguements:
+        user_key: sort list using this key.
+
+        Returns: Nothing.
+        """
         if not user_key:
             k = lambda x: (x['urg'], x['imp'])
         else:
@@ -62,6 +114,18 @@ class tasks:
 
     # search for all tasks that have 'obj'
     def search(self, obj):
+        """
+        Search for given obj in the entire list.
+
+        when searching every value in list is converted to
+        string and it is checked whether obj is in that list.
+
+        Arguements:
+        obj - object to be searched.
+
+        Returns:
+        A list of tasks within the list that contained obj
+        """
         t = []
         for task in self.tasks:
             for __, value in task.items():
@@ -75,6 +139,7 @@ class tasks:
     # default: to-do-list-data.json
     # to save to a custom file: save(<name of file>.json)
     def save(self, out_file='to-do-list-data.json'):
+        """ Save list as json to out_file. """
         data = {"to-do-list": self.tasks, "audio": self.audio}
         with open(out_file, 'w') as f:
             json.dump(data, f, indent=4, default=str)
@@ -83,13 +148,22 @@ class tasks:
     # default: to-do-list-data.json
     # to load from a custom file: load(<name of file>.json)
     def load(self, in_file='to-do-list-data.json', notif=False):
+        """
+        Load list from in_file.
+
+        if notif is True
+        notifications are sent to ubuntu regarding today's
+        and tomorrow's events. Also an audio tune is played if
+        there are any tasks for today.
+        """
         with open(in_file) as f:
             d = json.load(f)
             self.tasks = d["to-do-list"]
 
             self.audio = d["audio"]
             if not os.path.exists(self.audio):
-                print('File {} no longer Exists! Switching to default reminder Tone'.format(self.audio))
+                print(
+                    'File {} no longer Exists! Switching to default reminder Tone'.format(self.audio))
                 self.audio = './default_audio.mp3'
 
             for task in self.tasks:
@@ -104,6 +178,15 @@ class tasks:
     # returns the path to the current wallpaper
     # utility for update_wallpaper
     def get_wallpaper(self):
+        """
+        Return path for current wallpaper
+
+        if wallpaper is from defaults (prefix 'file')
+        return it's path and save path in orig_wallpaper.txt.
+
+        if wallpaer is already modified (no prefix of 'file')
+        use wallpaper stored in orig_wallpaper.txt.
+        """
         settings = Gio.Settings.new("org.gnome.desktop.background")
         uri = settings.get_string("picture-uri")
 
@@ -120,6 +203,7 @@ class tasks:
 
     # update wallpaper according to list of tasks
     def update_wallpaper(self):
+        """Update wallpaper according to current list. """
         tasks = self.tasks
         # get the wallpaper image in RGBA format
         wallpaper = Image.open(self.get_wallpaper()).convert('RGBA')
@@ -128,12 +212,27 @@ class tasks:
         final_img.save('to_do_list_wallpaper.png')
         path = os.getcwd() + '/to_do_list_wallpaper.png'
         # change wallpaper
-        os.system('/usr/bin/gsettings set org.gnome.desktop.background picture-uri {}'.format(path))
+        os.system(
+            '/usr/bin/gsettings set org.gnome.desktop.background picture-uri {}'.format(path))
         return path
 
     # sets up the tasks on the current wallpaper
     # utility for update_wallpaper
     def set_up(self, wallpaper):
+        """
+        Write tasks from current list onto wallpaper.
+
+        A black box with 50% opacity is placed on left side of screen.
+
+        Headers are written at Top Right and Bottom Right of box.
+
+        If there are n tasks, box is divided into n+1 equal parts and the
+        first n are populated with task related information in white.
+
+        Tasks are cut by a line if they are marked done
+
+        Basic text wrapping has also been implemented.
+        """
         tasks = self.tasks
         midx = int(round(wallpaper.size[0] / 2, 0))
         num = len(tasks)
@@ -213,23 +312,28 @@ class tasks:
 
     # reminders for tomorrow
     def upcoming_reminders(self):
+        """ Check for tasks due tomorrow and send notification about them. """
         tom_tasks = [task for task in self.tasks if task["date"]
                      == datetime.date.today() + datetime.timedelta(days=1)]
         if not tom_tasks:
             os.system('notify-send "No tasks for tomorrow!" ')
         else:
             for task in tom_tasks:
-                os.system('notify-send "Upcoming: {}" '.format(task["message"]))
+                os.system(
+                    'notify-send "Upcoming: {}" '.format(task["message"]))
 
     # utility for current reminders
     def ask_user(self, today_tasks):
+        """Ask user whether tasks marked for today have been completed."""
         for task in today_tasks:
-            ans = input('have you completed {} (y/n)?: '.format(task["message"])).lower()
+            ans = input(
+                'have you completed {} (y/n)?: '.format(task["message"])).lower()
             ind = self.tasks.index(task)
             if ans == 'y':
                 self.tasks[ind]["done"] = True
             if ans == 'n':
-                val = input('would you like to:\n1: delete task\n2: change due date\n')
+                val = input(
+                    'would you like to:\n1: delete task\n2: change due date\n')
                 if val is '1':
                     del self.tasks[ind]
                 if val is '2':
@@ -240,13 +344,25 @@ class tasks:
 
     # reminders for today
     def current_reminders(self):
+        """
+        Check for messages due today.
+
+        If not found:
+        send notification that no tasks are due today.
+
+        If found:
+        play audio
+        send notificatiob about today's task
+        ask whether task has been finished
+        """
         today_tasks = [
             task for task in self.tasks if task["date"] == datetime.date.today()]
         if not today_tasks:
             os.system('notify-send "No tasks for Today!" ')
         else:
             for task in today_tasks:
-                os.system('notify-send "Due today: {}" '.format(task["message"]))
+                os.system(
+                    'notify-send "Due today: {}" '.format(task["message"]))
             print(self.audio)
             p = vlc.MediaPlayer(self.audio)
             p.play()
@@ -256,6 +372,7 @@ class tasks:
 
     # mark task[val-1] as Done
     def mark_as_done(self, val):
+        """Mark task with index val-1 as Done."""
         ind = int(val) - 1
         print('marked "{}" as Done'.format(self.tasks[ind]["message"]))
         self.tasks[ind]["done"] = True
@@ -263,7 +380,7 @@ class tasks:
     # change default audio to user supplied Audio
     # audio is passeed as a pth to the audio
     def reminder_audio(self, path):
-
+        """ Change reminder audio tune to given path. """
         # change path to script's path
         os.chdir(sys.path[0])
 

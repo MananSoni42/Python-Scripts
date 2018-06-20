@@ -1,4 +1,14 @@
 #!/usr/bin/python3
+
+"""
+A command line to-do list for linux.
+
+This module handles the input from the user and relies on
+to_do_list_tasks.py for the manipulation of the tasks.
+
+for more information run: ./to_do_list --help
+"""
+
 import argparse
 import sys
 import datetime
@@ -30,12 +40,10 @@ parser.add_argument('-w', '--wallpaper',
 parser.add_argument(
     '--audioPath', help='update reminder audio', default='./default_audio.mp3')
 
-if __name__ == '__main__':
 
-    # initialize to-do list
-    to_do_list = tasks()
+def menu(to_do_list):
 
-    arg = parser.parse_args()
+    """handle input given by user in the form of arguements"""
 
     # load from file (default if nothing is specified)
     if arg.verbose:
@@ -100,6 +108,21 @@ if __name__ == '__main__':
         else:
             to_do_list.sort(arg.sortBy)
 
+    if arg.mark:
+        tlen = to_do_list.show(num=True)
+        tval_correct = False
+
+        while tval_correct is False:
+            try:
+                tval = int(input("Enter index of Task: "))
+                while tval not in range(1,tlen+1):
+                    tval = int(input(f'Out of bounds, Enter a value between 1 and {tlen+1}: '))
+                tval_correct = True
+            except ValueError:
+                print('An Integer is required! Please try again')
+        to_do_list.mark_as_done(tval)
+        to_do_list.update_wallpaper()
+
     if arg.remove:
         if input('Are You sure you want to clear your entire list? (y/n): ').lower() == 'y':
             to_do_list.empty()
@@ -110,7 +133,8 @@ if __name__ == '__main__':
             print(
                 '[ You may need to restart gnome for the changes to be reflected ]')
             print('[ new wallpaper is stored at {} ]'.format(path))
-            print('[ original wallpaper is stored at {} ]'.format(to_do_list.get_wallpaper()))
+            print('[ original wallpaper is stored at {} ]'.format(
+                to_do_list.get_wallpaper()))
 
     if arg.audioPath:
         if arg.verbose:
@@ -122,3 +146,14 @@ if __name__ == '__main__':
     if arg.verbose:
         print('[ saving to {} ]'.format(arg.save))
     to_do_list.save()
+
+
+if __name__ == '__main__':
+
+    # initialize to-do list
+    to_do_list = tasks()
+
+    arg = parser.parse_args()
+
+    #user options for list
+    menu(to_do_list)
