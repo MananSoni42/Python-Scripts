@@ -12,6 +12,6 @@
 * ```pip install python-vlc```
 * ```pip install Pillow```
 * ```pip install Pygments```
-OR
+ OR
 * ```pip install -r requirements.txt```
 
