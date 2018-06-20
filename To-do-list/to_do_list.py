@@ -39,11 +39,11 @@ if __name__ == '__main__':
 
     # load from file (default if nothing is specified)
     if arg.verbose:
-        print(f'[ loading from {arg.load} ]')
+        print('[ loading from {} ]'.format(arg.load))
     try:
         to_do_list.load(arg.load)
     except FileNotFoundError:
-        print(f'You haven\'t saved any tasks in {arg.load} Yet!')
+        print('You haven\'t saved any tasks in {} Yet!'.format(arg.load))
 
     # display help if no arguements are given
     if len(sys.argv) == 1:
@@ -65,7 +65,7 @@ if __name__ == '__main__':
                 date = datetime.date(int(year), int(month), int(day))
                 correct_date = True
             except Exception as e:
-                print(f'{e}! Please try again!')
+                print('{}! Please try again!'.format(e))
 
         urg = int(input('How urgent is this task(1-10): '))
         while urg not in range(1, 10 + 1):
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     # find tasks that contain arguement of --find
     if arg.find:
         if arg.verbose:
-            print(f'[ Looking for {arg.find} ]')
+            print('[ Looking for {} ]'.format(arg.find))
         search_results = to_do_list.search(arg.find)
         to_do_list.show(full_list=False, partial_list=search_results)
 
@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
     if arg.sortBy:
         if arg.verbose:
-            print(f'[ sort using {arg.sortBy} ]')
+            print('[ sort using {} ]'.format(arg.sortBy))
         if arg.sortBy == 'default':
             to_do_list.sort()
         else:
@@ -109,16 +109,16 @@ if __name__ == '__main__':
         if arg.verbose:
             print(
                 '[ You may need to restart gnome for the changes to be reflected ]')
-            print(f'[ new wallpaper is stored at {path} ]')
-            print(f'[ original wallpaper is stored at {to_do_list.get_wallpaper()} ]')
+            print('[ new wallpaper is stored at {} ]'.format(path))
+            print('[ original wallpaper is stored at {} ]'.format(to_do_list.get_wallpaper()))
 
     if arg.audioPath:
         if arg.verbose:
-            print(f'[ path for audio file is {arg.audioPath} ]')
+            print('[ path for audio file is {} ]'.format(arg.audioPath))
         path = arg.audioPath
         while not to_do_list.reminder_audio(path):
             path = input('Enter path of Audio File: ')
 
     if arg.verbose:
-        print(f'[ saving to {arg.save} ]')
+        print('[ saving to {} ]'.format(arg.save))
     to_do_list.save()

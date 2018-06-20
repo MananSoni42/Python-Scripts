@@ -40,11 +40,11 @@ class tasks:
         if num:
             count = 1
             for task in t:
-                print(f'{count} - {task["message"]} - {task["date"]} - urg: {task["urg"]} - imp: {task["imp"]}')
+                print('{} - {} - {} - urg: {} - imp: {}'.format(count,task["message"],task["date"],task["urg"],task["imp"]))
                 count += 1
         else:
             for task in t:
-                print(f'{task["message"]} - {task["date"]} - urg: {task["urg"]} - imp: {task["imp"]}')
+                print('{} - {} - urg: {} - imp: {}'.format(task["message"],task["date"],task["urg"],task["imp"]))
         return len(t)
 
     def empty(self):
@@ -89,7 +89,7 @@ class tasks:
 
             self.audio = d["audio"]
             if not os.path.exists(self.audio):
-                print(f'File {self.audio} no longer Exists! Switching to default reminder Tone')
+                print('File {} no longer Exists! Switching to default reminder Tone'.format(self.audio))
                 self.audio = './default_audio.mp3'
 
             for task in self.tasks:
@@ -128,7 +128,7 @@ class tasks:
         final_img.save('to_do_list_wallpaper.png')
         path = os.getcwd() + '/to_do_list_wallpaper.png'
         # change wallpaper
-        os.system(f'/usr/bin/gsettings set org.gnome.desktop.background picture-uri {path}')
+        os.system('/usr/bin/gsettings set org.gnome.desktop.background picture-uri {}'.format(path))
         return path
 
     # sets up the tasks on the current wallpaper
@@ -219,17 +219,17 @@ class tasks:
             os.system('notify-send "No tasks for tomorrow!" ')
         else:
             for task in tom_tasks:
-                os.system(f'notify-send "Upcoming: {task["message"]}" ')
+                os.system('notify-send "Upcoming: {}" '.format(task["message"]))
 
     # utility for current reminders
     def ask_user(self, today_tasks):
         for task in today_tasks:
-            ans = input(f'have you completed {task["message"]} (y/n)?: ').lower()
+            ans = input('have you completed {} (y/n)?: '.format(task["message"])).lower()
             ind = self.tasks.index(task)
             if ans == 'y':
                 self.tasks[ind]["done"] = True
             if ans == 'n':
-                val = input(f'would you like to:\n1: delete task\n2: change due date\n')
+                val = input('would you like to:\n1: delete task\n2: change due date\n')
                 if val is '1':
                     del self.tasks[ind]
                 if val is '2':
@@ -246,7 +246,7 @@ class tasks:
             os.system('notify-send "No tasks for Today!" ')
         else:
             for task in today_tasks:
-                os.system(f'notify-send "Due today: {task["message"]}" ')
+                os.system('notify-send "Due today: {}" '.format(task["message"]))
             print(self.audio)
             p = vlc.MediaPlayer(self.audio)
             p.play()
@@ -257,7 +257,7 @@ class tasks:
     # mark task[val-1] as Done
     def mark_as_done(self, val):
         ind = int(val) - 1
-        print(f'marked "{self.tasks[ind]["message"]}" as Done')
+        print('marked "{}" as Done'.format(self.tasks[ind]["message"]))
         self.tasks[ind]["done"] = True
 
     # change default audio to user supplied Audio
