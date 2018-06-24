@@ -3,12 +3,12 @@
 ---
 #### Requirements
 * python 3+
-* pip
-```sudo apt-get install pip```
+* pip3
 ---
 #### Installation
-* ```pip install python-vlc```
-* ```pip install Pillow```
-* ```pip install Pygments```  
+* ```pip3 install python-vlc```
+* ```pip3 install vlc```
+* ```pip3 install Pillow```
+* ```pip3 install Pygments```  
 OR
-* ```pip install -r requirements.txt```
+* ```pip3 install -r requirements.txt```
